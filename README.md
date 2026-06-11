@@ -1,18 +1,18 @@
 # Homebrew Tap for knit
 
-This is the official Homebrew tap for [knit](https://github.com/marc-merino/knit), a local-first CLI for coordinating cross-repo feature bundles.
+This is the official Homebrew tap for [knit](https://github.com/knit-cli/knit), a local-first CLI for coordinating cross-repo feature bundles.
 
 ## Installation
 
 ```sh
-brew tap marc-merino/tools
+brew tap knit-cli/tools
 brew install knit
 ```
 
 Or in one command:
 
 ```sh
-brew install marc-merino/tools/knit
+brew install knit-cli/tools/knit
 ```
 
 ## Updating
@@ -26,7 +26,7 @@ brew upgrade knit
 
 ```sh
 brew uninstall knit
-brew untap marc-merino/tools
+brew untap knit-cli/tools
 ```
 
 ## Available Formulae
