@@ -1,26 +1,26 @@
 class Knit < Formula
   desc "Local-first CLI for coordinating cross-repo feature bundles"
   homepage "https://github.com/knit-cli/knit"
-  version "0.1.0-alpha.8"
+  version "0.1.0-alpha.9"
   license "Apache-2.0"
 
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/knit-cli/knit/releases/download/v#{version}/knit-v#{version}-aarch64-apple-darwin.tar.gz"
-      sha256 "46e09d7ce1dc201fc8f5305ada6eccaba0f37b07a207e0dd0966fe9c7cf76597"
+      sha256 "9d5bb58844ce44edc1598c8ea0bd1eb7e13099dd1b803471487c798ead01e352"
     else
       url "https://github.com/knit-cli/knit/releases/download/v#{version}/knit-v#{version}-x86_64-apple-darwin.tar.gz"
-      sha256 "4e5a9c6e705254daf6b5149e63957c82604dda6dd622cbac40cbd2db297fa5e1"
+      sha256 "53872a1797933c87381cc4ebf5b9a6bd9acf3fa34b1a5ae04743e88d59a7dc79"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
       url "https://github.com/knit-cli/knit/releases/download/v#{version}/knit-v#{version}-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "c37837894b7d5c961f710a6eead0d48e8974db7421eb44325faa9ebfc7db099b"
+      sha256 "53adddfb2e64debbc304ed3b8b29416eae932036ddaa140b5bc3ca7913ff3c4f"
     else
       url "https://github.com/knit-cli/knit/releases/download/v#{version}/knit-v#{version}-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "311bff8ee1eb6c39aa082e1a5cb1930c1358a78657b50d5aa957fe329a2d6a79"
+      sha256 "e12b03a8979ffc91e91553cd3008a4ff3ad86760f2b15b741bc78bb072c2f121"
     end
   end
 
