@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  bottle-install:
+    name: Bottle install (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_ANALYTICS: "1"
+    steps:
+      - name: Check out tap
+        uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: Stage formula in a local synthetic tap
+        run: |
+          tap_dir="$(brew --repository)/Library/Taps/knit-test/homebrew-tap"
+          mkdir -p "$tap_dir/Formula"
+          cp "$GITHUB_WORKSPACE/Formula/knit.rb" "$tap_dir/Formula/knit.rb"
+          if [ ! -d "$tap_dir/.git" ]; then
+            git -C "$tap_dir" init -q
+            git -C "$tap_dir" add Formula/knit.rb
+            git -C "$tap_dir" -c user.name=ci -c user.email=ci@example.invalid commit -q -m "Synthetic tap formula"
+          fi
+          brew trust knit-test/tap
+
+      - name: Require a compatible bottle
+        run: |
+          cat > "$RUNNER_TEMP/bottle_check.rb" <<'RUBY'
+          require "formula_installer"
+          f = Formulary.factory("knit-test/tap/knit")
+          tags = %w[arm64_big_sur big_sur arm64_linux x86_64_linux]
+          tags += %w[arm64_sonoma sonoma arm64_sequoia sequoia arm64_tahoe tahoe] if OS.mac?
+          tags.each do |symbol|
+            requested = Utils::Bottles::Tag.from_symbol(symbol.to_sym)
+            bottle = f.bottle_for_tag(requested)
+            abort "Missing compatible bottle for #{symbol}" unless bottle
+            abort "Bottle is not fully relocatable for #{symbol}" unless bottle.cellar == :any_skip_relocation
+            abort "Wrong bottle architecture for #{symbol}" unless bottle.tag.standardized_arch == requested.standardized_arch
+          end
+          abort "Missing compatible bottle" unless FormulaInstaller.new(f).pour_bottle?
+          RUBY
+          brew ruby "$RUNNER_TEMP/bottle_check.rb"
+
+      - name: Install from the tap (bottle by default)
+        run: brew install knit-test/tap/knit
+
+      - name: Assert the install poured from a bottle
+        run: |
+          version="$(brew list --versions knit | awk '{print $2}')"
+          receipt="$(brew --cellar knit)/$version/INSTALL_RECEIPT.json"
+          if [ ! -f "$receipt" ]; then
+            echo "Receipt not found: $receipt" >&2
+            exit 1
+          fi
+          python3 - "$receipt" <<'EOF'
+          import json
+          import sys
+
+          with open(sys.argv[1], encoding="utf-8") as fh:
+              receipt = json.load(fh)
+
+          poured = receipt.get("poured_from_bottle")
+          if poured is not True:
+              sys.exit("FAIL: INSTALL_RECEIPT.json does not record poured_from_bottle: true")
+          print("OK: install poured from a bottle")
+          EOF
+
+      - name: Run knit --version
+        run: |
+          "$(brew --prefix knit)/bin/knit" --version
